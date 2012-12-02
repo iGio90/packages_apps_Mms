@@ -943,8 +943,8 @@ public class MessagingNotification {
             }
         }
 
+        // Set light defaults
         defaults |= Notification.DEFAULT_LIGHTS;
-
         noti.setDefaults(defaults);
 
         // set up delete intent
@@ -1129,6 +1129,20 @@ public class MessagingNotification {
             }
         }
 
+        // Trigger the QuickMessage pop-up activity if enabled
+        // But don't show the QuickMessage if the user is in a call or the phone is ringing
+        if (qmPopupEnabled && qmIntent != null) {
+            TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (tm.getCallState() == TelephonyManager.CALL_STATE_IDLE && !ConversationList.mIsRunning && !ComposeMessageActivity.mIsRunning) {
+                // Since a QM Popup may wake and unlock we need to prevent the light from being dismissed
+                notification.flags |= Notification.FLAG_FORCE_LED_SCREEN_OFF;
+
+                // Show the popup
+                context.startActivity(qmIntent);
+            }
+        }
+
+        // Post the notification
         nm.notify(NOTIFICATION_ID, notification);
     }
 
